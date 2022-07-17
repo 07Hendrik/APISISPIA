@@ -1,13 +1,18 @@
 const { Router } = require("express");
+const { BIND_OUT, CURSOR } = require("oracledb");
 const router = Router();
 const BD = require("../config/configbd");
+const login = require("../login/usuario");
 
+//oracledb.initOracleClient({libDir: '/Users/cjones/instantclient_19_3'});
 //READ
 router.get("/getUsers", async (req, res) => {
   sql = "select * from tabla_persona where idpersona=1";
 
   let result = await BD.Open(sql, [], false);
   Users = [];
+
+  //console.log(result);
 
   result.rows.map((user) => {
     let userSchema = {
@@ -23,6 +28,23 @@ router.get("/getUsers", async (req, res) => {
   res.json(Users);
 });
 
+router.get("/getUsersSP", async (req, res) => {
+  const { idpersona } = req.body;
+  let result = await login.devuelveUsuario(idpersona);
+  res.json(result);
+});
+
+router.get("/getListaRol", async (req, res) => {
+  let result = await login.ListaRol();
+  res.json(result);
+});
+
+router.post("/RegistrarRol", async (req, res) => {
+  let result = await login.RegistrarRol(req, true);
+  console.log(result);
+  res.json(result);
+});
+
 //CREATE
 router.post("/addUser", async (req, res) => {
   const { idpersona, dni, nombre, apepaterno, apematerno } = req.body;
@@ -31,7 +53,7 @@ router.post("/addUser", async (req, res) => {
   sql =
     "insert into tabla_persona(idpersona,dni,nombre, apepaterno, apematerno) values (:idpersona,:dni,:nombre, :apepaterno, :apematerno)";
 
-  await BD.Open(sql, [idpersona,dni,nombre, apepaterno, apematerno], true);
+  await BD.Open(sql, [idpersona, dni, nombre, apepaterno, apematerno], true);
 
   res.status(200).json({
     idpersona: idpersona,
@@ -52,7 +74,7 @@ router.put("/updateUser", async (req, res) => {
   res.status(200).json({
     idpersona: idpersona,
     nombre: nombre,
-    apematerno: apematerno
+    apematerno: apematerno,
   });
 });
 
